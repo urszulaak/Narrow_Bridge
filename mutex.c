@@ -4,7 +4,7 @@
 #include <string.h>
 #include <errno.h>
 
-int mutex(int N, char** version){
+int mutex(int N, int info){
     //kod programu
     return 0;
 }

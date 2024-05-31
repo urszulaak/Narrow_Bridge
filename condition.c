@@ -4,7 +4,7 @@
 #include <string.h>
 #include <errno.h>
 
-int condition(int N, char** version){
+int condition(int N, int info){
     //kod programu
     return 0;
 }

@@ -13,7 +13,13 @@ int main(int argc, char** argv){
     scanf("%c",&version);
     printf("%c",version);
     int N=argv[1]; //liczba samochodow(watkow)
-    char info=argv[2]; //informacja o wpisanym parametrze -info
+    char information=argv[2]; //informacja o wpisanym parametrze -info
+    int info;
+    if(strcmp("-info",information)==0){
+        info=1;
+    }else{
+        info=0;
+    }
     if(strcmp("m",version)==0){
         mutex(N, info);
     }else if(strcmp("c",version)==0){
