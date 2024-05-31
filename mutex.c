@@ -10,7 +10,7 @@ void* car(){
     
 }
 
-int mutex(int N, char** version){
+int mutex(int N, int info){
     pthread_t cars;
     srand(time(NULL));
     for(int i=1;i<N+1;i++){
