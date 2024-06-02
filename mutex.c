@@ -11,69 +11,68 @@ pthread_mutex_t queueA_mutex;
 pthread_mutex_t queueB_mutex;
 int cityA, cityB, queueA, queueB, bridge;
 
-void* car(void* arg){
-    //int wait = (rand()%10)+1; //ile czeka w miescie
-    int type = (rand()%2); //z jakiego miasta startuje 0-miasto_A 1-miasto_B
-    int id = *(int*)arg; //id samochodu
+
+void* car(void* arg) {
+    int id = *(int*)arg;
     char direction[3];
-    while(1){
-        int wait = (rand()%10)+1;
-        if(type){
-            printf("Car %d stay in city A for %d\n",id,wait);
+    int type = rand() % 2; // Losowe miasto początkowe
+    while (1) {
+        int wait = (rand() % 5) + 1;
+        if (!type) { // miasto A
+            printf("Car %d stay in city A for %d seconds\n", id, wait);
             pthread_mutex_lock(&cityA_mutex);
             cityA++;
             pthread_mutex_unlock(&cityA_mutex);
-        }else{
-            printf("Car %d stay in city B for %d\n",id,wait);
-            pthread_mutex_lock(&cityB_mutex);
-            cityB++;
-            pthread_mutex_unlock(&cityB_mutex);
-        }
-        if(strncmp(direction,">>",2) == 0 || strncmp(direction,"<<",2) == 0){
-            printf("A-%d %d --> [%s %d %s] <-- %d %d-B\n",cityA,queueA,direction,id,direction,queueB,cityB);
-        }else{
-            printf("A-%d %d --> [] <-- %d %d-B\n",cityA,queueA,queueB,cityB);
-        }
-        sleep(wait);
-        if(type){
-            printf("Car %d from city A want cross the bridge\n",id);
+            sleep(wait);
+
+            printf("Car %d from city A wants to cross the bridge\n", id);
             pthread_mutex_lock(&queueA_mutex);
             cityA--;
             queueA++;
             pthread_mutex_unlock(&queueA_mutex);
-        }else{
-            printf("Car %d from city B want cross the bridge\n",id);
+
+            pthread_mutex_lock(&car_mutex); // wjazd na most
+            sprintf(direction, ">>");
+            queueA--;
+            printf("A-%d %d --> [%s %d %s] <-- %d %d-B\n", cityA, queueA, direction, id, direction, queueB, cityB);
+            sleep(1);
+            pthread_mutex_unlock(&car_mutex);
+
+            pthread_mutex_lock(&cityB_mutex);
+            cityB++;
+            type = 1;
+            pthread_mutex_unlock(&cityB_mutex);
+
+        } else { // miasto B
+            printf("Car %d stay in city B for %d seconds\n", id, wait);
+            pthread_mutex_lock(&cityB_mutex);
+            cityB++;
+            pthread_mutex_unlock(&cityB_mutex);
+            sleep(wait);
+
+            printf("Car %d from city B wants to cross the bridge\n", id);
             pthread_mutex_lock(&queueB_mutex);
             cityB--;
             queueB++;
             pthread_mutex_unlock(&queueB_mutex);
-        }
-        if(strncmp(direction,">>",2) == 0 || strncmp(direction,"<<",2) == 0){
-            printf("A-%d %d --> [%s %d %s] <-- %d %d-B\n",cityA,queueA,direction,id,direction,queueB,cityB);
-        }else{
-            printf("A-%d %d --> [] <-- %d %d-B\n",cityA,queueA,queueB,cityB);
-        }
-        pthread_mutex_lock(&car_mutex);
-        if(type){
-            sprintf(direction,"%s",">>");
-            queueA--;
-        }else{
-            sprintf(direction,"%s","<<");
+
+            pthread_mutex_lock(&car_mutex); // wjazd na most
+            sprintf(direction, "<<");
             queueB--;
+            printf("A-%d %d --> [%s %d %s] <-- %d %d-B\n", cityA, queueA, direction, id, direction, queueB, cityB);
+            sleep(1);
+            pthread_mutex_unlock(&car_mutex);
+
+            pthread_mutex_lock(&cityA_mutex);
+            cityA++;
+            type = 0;
+            pthread_mutex_unlock(&cityA_mutex);
         }
-        if(strncmp(direction,">>",2) == 0 || strncmp(direction,"<<",2) == 0){
-            printf("A-%d %d --> [%s %d %s] <-- %d %d-B\n",cityA,queueA,direction,id,direction,queueB,cityB);
-        }else{
-            printf("A-%d %d --> [] <-- %d %d-B\n",cityA,queueA,queueB,cityB);
-        }
-        sprintf(direction,"%s","");
-        if(type){
-            type=0;
-        }else{
-            type=1;
-        }
-        pthread_mutex_unlock(&car_mutex);
+
+        // Po przejeździe przez most, samochód zmienia miasto
+        sprintf(direction, "");
     }
+    return NULL;
 }
 
 int mutex(int N, int info){

@@ -4,4 +4,4 @@ main: $(OBJ)
 	gcc $(OBJ) -o main -Wall -pthread
 
 5car: main
-	@./main 5 -info
+	@./main 3 -info
