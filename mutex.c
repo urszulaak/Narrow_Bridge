@@ -34,8 +34,8 @@ void* car(void* arg) {
             pthread_mutex_lock(&car_mutex); // wjazd na most
             sprintf(direction, ">>");
             queueA--;
-            printf("A-%d %d --> [%s %d %s] <-- %d %d-B\n", cityA, queueA, direction, id, direction, queueB, cityB);
             sleep(1);
+            printf("A-%d %d --> [%s %d %s] <-- %d %d-B\n", cityA, queueA, direction, id, direction, queueB, cityB);
             pthread_mutex_unlock(&car_mutex);
 
             pthread_mutex_lock(&cityB_mutex);
@@ -59,8 +59,8 @@ void* car(void* arg) {
             pthread_mutex_lock(&car_mutex); // wjazd na most
             sprintf(direction, "<<");
             queueB--;
-            printf("A-%d %d --> [%s %d %s] <-- %d %d-B\n", cityA, queueA, direction, id, direction, queueB, cityB);
             sleep(1);
+            printf("A-%d %d --> [%s %d %s] <-- %d %d-B\n", cityA, queueA, direction, id, direction, queueB, cityB);
             pthread_mutex_unlock(&car_mutex);
 
             pthread_mutex_lock(&cityA_mutex);
