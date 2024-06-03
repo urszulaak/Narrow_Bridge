@@ -10,7 +10,7 @@ pthread_mutex_t cityA_mutex;
 pthread_mutex_t cityB_mutex;
 pthread_mutex_t queueA_mutex;
 pthread_mutex_t queueB_mutex;
-int cityA, cityB, queueA, queueB, bridge;
+int cityA=0, cityB=0, queueA=0, queueB=0, bridge=0;
 
 typedef struct ticket_lock {
     pthread_cond_t cond;
@@ -45,12 +45,6 @@ void do_fake_work(long iter){
     }
     x=1.5f;
 }
-
-pthread_mutex_t cityA_mutex;
-pthread_mutex_t cityB_mutex;
-pthread_mutex_t queueA_mutex;
-pthread_mutex_t queueB_mutex;
-int cityA = 0, cityB = 0, queueA = 0, queueB = 0;
 
 ticket_lock_t bridge_lock = TICKET_LOCK_INITIALIZER;
 
