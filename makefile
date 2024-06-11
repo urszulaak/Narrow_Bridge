@@ -22,5 +22,4 @@ main:
 .PHONY: clean
 
 clean:
-	@rm -r myChat
-	@rm -r pipe*
+	@rm -r mychat
