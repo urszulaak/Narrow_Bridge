@@ -22,4 +22,4 @@ main:
 .PHONY: clean
 
 clean:
-	@rm -r mychat
+	@rm -r main
