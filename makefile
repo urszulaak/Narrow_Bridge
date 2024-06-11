@@ -1,11 +1,9 @@
-OBJ = main.c
-
-main: $(OBJ)
-	gcc $(OBJ) -o main -Wall -pthread -lm
+main:
+	gcc main.c -o main -Wall -pthread -lm
 
 1cari: main
 	@./main 1 -info
-	
+
 1car: main
 	@./main 1
 
@@ -18,11 +16,11 @@ main: $(OBJ)
 50cari: main
 	@./main 50 -info
 
-5ocar: main
+50car: main
 	@./main 5
 
 .PHONY: clean
 
 clean:
-        @rm -r myChat
-        @rm -r pipe*
+	@rm -r myChat
+	@rm -r pipe*

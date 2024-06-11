@@ -167,27 +167,59 @@ int mutex(int N) {
     pthread_t cars[N];
     int ids[N];
     srand(time(NULL));
-    pthread_mutex_init(&cityA_mutex, NULL);
-    pthread_mutex_init(&cityB_mutex, NULL);
-    pthread_mutex_init(&queueA_mutex, NULL);
-    pthread_mutex_init(&queueB_mutex, NULL);
-    sem_init(&bridge_sem, 0, 1);
+    if (pthread_mutex_init(&cityA_mutex, NULL) != 0) {
+        perror("Error initializing cityA_mutex");
+        return -1;
+    }
+    if (pthread_mutex_init(&cityB_mutex, NULL) != 0) {
+        perror("Error initializing cityB_mutex");
+        return -1;
+    }
+    if (pthread_mutex_init(&queueA_mutex, NULL) != 0) {
+        perror("Error initializing queueA_mutex");
+        return -1;
+    }
+    if (pthread_mutex_init(&queueB_mutex, NULL) != 0) {
+        perror("Error initializing queueB_mutex");
+        return -1;
+    }
+    if (sem_init(&bridge_sem, 0, 1) != 0) {
+        perror("Error initializing bridge_sem");
+        return -1;
+    }
     for (int i = 0; i < N; i++) {
         ids[i] = i + 1;
         if (pthread_create(&cars[i], NULL, &car, &ids[i]) != 0) {
+            perror("Error creating thread");
             return -1;
         }
     }
     for (int i = 0; i < N; i++) {
         if (pthread_join(cars[i], NULL) != 0) {
+            perror("Error joining thread");
             return -1;
         }
     }
-    pthread_mutex_destroy(&cityA_mutex);
-    pthread_mutex_destroy(&cityB_mutex);
-    pthread_mutex_destroy(&queueA_mutex);
-    pthread_mutex_destroy(&queueB_mutex);
-    sem_destroy(&bridge_sem);
+    if (pthread_mutex_destroy(&cityA_mutex) != 0) {
+        perror("Error destroying cityA_mutex");
+        return -1;
+    }
+    if (pthread_mutex_destroy(&cityB_mutex) != 0) {
+        perror("Error destroying cityB_mutex");
+        return -1;
+    }
+    if (pthread_mutex_destroy(&queueA_mutex) != 0) {
+        perror("Error destroying queueA_mutex");
+        return -1;
+    }
+    if (pthread_mutex_destroy(&queueB_mutex) != 0) {
+        perror("Error destroying queueB_mutex");
+        return -1;
+    }
+    if (sem_destroy(&bridge_sem) != 0) {
+        perror("Error destroying bridge_sem");
+        return -1;
+    }
     return 0;
 }
 
@@ -195,25 +227,55 @@ int condition(int N) {
     pthread_t cars[N];
     int ids[N];
     srand(time(NULL));
-    pthread_mutex_init(&cityA_mutex, NULL);
-    pthread_mutex_init(&cityB_mutex, NULL);
-    pthread_mutex_init(&queueA_mutex, NULL);
-    pthread_mutex_init(&queueB_mutex, NULL);
+    if (pthread_mutex_init(&cityA_mutex, NULL) != 0) {
+        perror("Error initializing cityA_mutex");
+        return -1;
+    }
+    if (pthread_mutex_init(&cityB_mutex, NULL) != 0) {
+        perror("Error initializing cityB_mutex");
+        return -1;
+    }
+    if (pthread_mutex_init(&queueA_mutex, NULL) != 0) {
+        perror("Error initializing queueA_mutex");
+        return -1;
+    }
+    if (pthread_mutex_init(&queueB_mutex, NULL) != 0) {
+        perror("Error initializing queueB_mutex");
+        return -1;
+    }
     for (int i = 0; i < N; i++) {
         ids[i] = i + 1;
         if (pthread_create(&cars[i], NULL, &car2, &ids[i]) != 0) {
+            perror("Error creating thread");
             return -1;
         }
     }
     for (int i = 0; i < N; i++) {
         if (pthread_join(cars[i], NULL) != 0) {
+            perror("Error joining thread");
             return -1;
         }
     }
-    pthread_mutex_destroy(&cityA_mutex);
-    pthread_mutex_destroy(&cityB_mutex);
-    pthread_mutex_destroy(&queueA_mutex);
-    pthread_mutex_destroy(&queueB_mutex);
+    if (pthread_mutex_destroy(&cityA_mutex) != 0) {
+        perror("Error destroying cityA_mutex");
+        return -1;
+    }
+    if (pthread_mutex_destroy(&cityB_mutex) != 0) {
+        perror("Error destroying cityB_mutex");
+        return -1;
+    }
+    if (pthread_mutex_destroy(&queueA_mutex) != 0) {
+        perror("Error destroying queueA_mutex");
+        return -1;
+    }
+    if (pthread_mutex_destroy(&queueB_mutex) != 0) {
+        perror("Error destroying queueB_mutex");
+        return -1;
+    }
+    if (sem_destroy(&bridge_sem) != 0) {
+        perror("Error destroying bridge_sem");
+        return -1;
+    }
     return 0;
 }
 
