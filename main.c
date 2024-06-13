@@ -264,17 +264,18 @@ int execution(int N, int version) {
 int main(int argc, char** argv){
     char version; //wybor wersji programu m-mutexy c-condition var
     int ver=1;
-    printf("Which version of program would you like to choose?\nType described letter:\nm - mutex\nc - condition variables\n");
-    scanf("%c",&version);
-    int N=atoi(argv[1]); //liczba samochodow(watkow)
     if(argc==3){
         char* information=argv[2]; //informacja o wpisanym parametrze -info
         if(strncmp("-info",information,5)==0){
             info=1;
         }else{
-            info=0;
+            perror("Invalid info mode");
+            return -1;
         }
     }
+    printf("Which version of program would you like to choose?\nType described letter:\nm - mutex\nc - condition variables\n");
+    scanf("%c",&version);
+    int N=atoi(argv[1]); //liczba samochodow(watkow)
     if(strncmp("m",&version,1)==0){
         execution(N,ver);
     }else if(strncmp("c",&version,1)==0){
