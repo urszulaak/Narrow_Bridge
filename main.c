@@ -8,7 +8,6 @@
 
 pthread_mutex_t cityA_mutex;
 pthread_mutex_t cityB_mutex;
-sem_t bridge_sem;
 pthread_mutex_t queueA_mutex;
 pthread_mutex_t queueB_mutex;
 int info=0, cityA=0, cityB=0, queueA=0, queueB=0, bridge=0;
@@ -19,7 +18,14 @@ typedef struct ticket_lock {
     unsigned long queue_head, queue_tail;
 } ticket_lock_t;
 
+typedef struct ticket_lock_sem {
+    pthread_mutex_t mutex_sem;
+    sem_t semaphore;
+    unsigned long queue_head_sem, queue_tail_sem;
+} ticket_lock_sem_t;
+
 #define TICKET_LOCK_INITIALIZER { PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, 0, 0 }
+#define TICKET_LOCK_SEM_INITIALIZER { PTHREAD_MUTEX_INITIALIZER, {0}, 0, 0 }
 
 void ticket_lock(ticket_lock_t *ticket) {
     unsigned long queue_me;
@@ -39,7 +45,30 @@ void ticket_unlock(ticket_lock_t *ticket) {
     pthread_mutex_unlock(&ticket->mutex);
 }
 
+void ticket_lock_sem(ticket_lock_sem_t *ticket_sem) {
+    unsigned long queue_me_sem;
+
+    pthread_mutex_lock(&ticket_sem->mutex_sem);
+    queue_me_sem = ticket_sem->queue_tail_sem++;
+    if (queue_me_sem != ticket_sem->queue_head_sem) {
+        pthread_mutex_unlock(&ticket_sem->mutex_sem);
+        sem_wait(&ticket_sem->semaphore);
+    } else {
+        pthread_mutex_unlock(&ticket_sem->mutex_sem);
+    }
+}
+
+void ticket_unlock_sem(ticket_lock_sem_t *ticket_sem) {
+    pthread_mutex_lock(&ticket_sem->mutex_sem);
+    ticket_sem->queue_head_sem++;
+    if (ticket_sem->queue_head_sem != ticket_sem->queue_tail_sem) {
+        sem_post(&ticket_sem->semaphore);
+    }
+    pthread_mutex_unlock(&ticket_sem->mutex_sem);
+}
+
 ticket_lock_t bridge_lock = TICKET_LOCK_INITIALIZER;
+ticket_lock_sem_t bridge_lock_sem = TICKET_LOCK_SEM_INITIALIZER;
 
 float x = 1.5f;
 void do_fake_work(long iter) {
@@ -70,13 +99,13 @@ void* car(void* arg) {
             cityA--;
             queueA++;
             pthread_mutex_unlock(&queueA_mutex);
-            sem_wait(&bridge_sem); // Wjazd na most
+            ticket_lock_sem(&bridge_lock_sem);
             sprintf(direction, ">>");
             queueA--;
-            do_fake_work(100000);
+            do_fake_work(1000000);
             printf("A-%d %d --> [%s %d %s] <-- %d %d-B\n", cityA, queueA, direction, id, direction, queueB, cityB);
             type = 1;
-            sem_post(&bridge_sem);
+            ticket_unlock_sem(&bridge_lock_sem);
         } else { // miasto B
             if(info){
                 printf("Car %d stay in city B for %d seconds\n", id, wait);
@@ -92,13 +121,13 @@ void* car(void* arg) {
             cityB--;
             queueB++;
             pthread_mutex_unlock(&queueB_mutex);
-            sem_wait(&bridge_sem);
+            ticket_lock_sem(&bridge_lock_sem);
             sprintf(direction, "<<");
             queueB--;
-            do_fake_work(100000);
+            do_fake_work(1000000);
             printf("A-%d %d --> [%s %d %s] <-- %d %d-B\n", cityA, queueA, direction, id, direction, queueB, cityB);
             type = 0;
-            sem_post(&bridge_sem);
+            ticket_unlock_sem(&bridge_lock_sem);
         }
         sprintf(direction, "");
     }
@@ -130,7 +159,7 @@ void* car2(void* arg) {
             ticket_lock(&bridge_lock);
             queueA--;
             sprintf(direction, ">>");
-            do_fake_work(100000);
+            do_fake_work(1000000);
             printf("A-%d %d --> [%s %d %s] <-- %d %d-B\n", cityA, queueA, direction, id, direction, queueB, cityB);
             type = 1;
             ticket_unlock(&bridge_lock);
@@ -153,7 +182,7 @@ void* car2(void* arg) {
             ticket_lock(&bridge_lock);
             queueB--;
             sprintf(direction, "<<");
-            do_fake_work(100000);
+            do_fake_work(1000000);
             printf("A-%d %d --> [%s %d %s] <-- %d %d-B\n", cityA, queueA, direction, id, direction, queueB, cityB);
             type = 0;
             ticket_unlock(&bridge_lock);
@@ -163,7 +192,7 @@ void* car2(void* arg) {
     return NULL;
 }
 
-int mutex(int N) {
+int execution(int N, int version) {
     pthread_t cars[N];
     int ids[N];
     srand(time(NULL));
@@ -183,77 +212,34 @@ int mutex(int N) {
         perror("Error initializing queueB_mutex");
         return -1;
     }
-    if (sem_init(&bridge_sem, 0, 1) != 0) {
-        perror("Error initializing bridge_sem");
-        return -1;
-    }
-    for (int i = 0; i < N; i++) {
-        ids[i] = i + 1;
-        if (pthread_create(&cars[i], NULL, &car, &ids[i]) != 0) {
-            perror("Error creating thread");
-            return -1;
-        }
-    }
-    for (int i = 0; i < N; i++) {
-        if (pthread_join(cars[i], NULL) != 0) {
-            perror("Error joining thread");
-            return -1;
-        }
-    }
-    if (pthread_mutex_destroy(&cityA_mutex) != 0) {
-        perror("Error destroying cityA_mutex");
-        return -1;
-    }
-    if (pthread_mutex_destroy(&cityB_mutex) != 0) {
-        perror("Error destroying cityB_mutex");
-        return -1;
-    }
-    if (pthread_mutex_destroy(&queueA_mutex) != 0) {
-        perror("Error destroying queueA_mutex");
-        return -1;
-    }
-    if (pthread_mutex_destroy(&queueB_mutex) != 0) {
-        perror("Error destroying queueB_mutex");
-        return -1;
-    }
-    if (sem_destroy(&bridge_sem) != 0) {
-        perror("Error destroying bridge_sem");
-        return -1;
-    }
-    return 0;
-}
 
-int condition(int N) {
-    pthread_t cars[N];
-    int ids[N];
-    srand(time(NULL));
-    if (pthread_mutex_init(&cityA_mutex, NULL) != 0) {
-        perror("Error initializing cityA_mutex");
-        return -1;
-    }
-    if (pthread_mutex_init(&cityB_mutex, NULL) != 0) {
-        perror("Error initializing cityB_mutex");
-        return -1;
-    }
-    if (pthread_mutex_init(&queueA_mutex, NULL) != 0) {
-        perror("Error initializing queueA_mutex");
-        return -1;
-    }
-    if (pthread_mutex_init(&queueB_mutex, NULL) != 0) {
-        perror("Error initializing queueB_mutex");
-        return -1;
-    }
-    for (int i = 0; i < N; i++) {
-        ids[i] = i + 1;
-        if (pthread_create(&cars[i], NULL, &car2, &ids[i]) != 0) {
-            perror("Error creating thread");
-            return -1;
+    if(version){
+        for (int i = 0; i < N; i++) {
+            ids[i] = i + 1;
+            if (pthread_create(&cars[i], NULL, &car, &ids[i]) != 0) {
+                perror("Error creating thread");
+                return -1;
+            }
         }
-    }
-    for (int i = 0; i < N; i++) {
-        if (pthread_join(cars[i], NULL) != 0) {
-            perror("Error joining thread");
-            return -1;
+        for (int i = 0; i < N; i++) {
+            if (pthread_join(cars[i], NULL) != 0) {
+                perror("Error joining thread");
+                return -1;
+            }
+        }
+    }else{
+        for (int i = 0; i < N; i++) {
+            ids[i] = i + 1;
+            if (pthread_create(&cars[i], NULL, &car2, &ids[i]) != 0) {
+                perror("Error creating thread");
+                return -1;
+            }
+        }
+        for (int i = 0; i < N; i++) {
+            if (pthread_join(cars[i], NULL) != 0) {
+                perror("Error joining thread");
+                return -1;
+            }
         }
     }
     if (pthread_mutex_destroy(&cityA_mutex) != 0) {
@@ -270,10 +256,6 @@ int condition(int N) {
     }
     if (pthread_mutex_destroy(&queueB_mutex) != 0) {
         perror("Error destroying queueB_mutex");
-        return -1;
-    }
-    if (sem_destroy(&bridge_sem) != 0) {
-        perror("Error destroying bridge_sem");
         return -1;
     }
     return 0;
@@ -281,6 +263,7 @@ int condition(int N) {
 
 int main(int argc, char** argv){
     char version; //wybor wersji programu m-mutexy c-condition var
+    int ver=1;
     printf("Which version of program would you like to choose?\nType described letter:\nm - mutex\nc - condition variables\n");
     scanf("%c",&version);
     int N=atoi(argv[1]); //liczba samochodow(watkow)
@@ -293,11 +276,13 @@ int main(int argc, char** argv){
         }
     }
     if(strncmp("m",&version,1)==0){
-        mutex(N);
+        execution(N,ver);
     }else if(strncmp("c",&version,1)==0){
-        condition(N);
+        ver=0;
+        execution(N,ver);
     }else{
         perror("Invalid version");
         return -1;
     }
+    return 0;
 }
