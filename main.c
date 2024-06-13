@@ -25,7 +25,7 @@ typedef struct ticket_lock_sem {
 } ticket_lock_sem_t;
 
 #define TICKET_LOCK_INITIALIZER { PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, 0, 0 }
-#define TICKET_LOCK_SEM_INITIALIZER { PTHREAD_MUTEX_INITIALIZER, SEM_INITIALIZER, 0, 0 }
+#define TICKET_LOCK_SEM_INITIALIZER { PTHREAD_MUTEX_INITIALIZER, {0}, 0, 0 }
 
 void ticket_lock(ticket_lock_t *ticket) {
     unsigned long queue_me;
