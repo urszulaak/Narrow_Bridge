@@ -6,10 +6,10 @@
 #include <math.h>
 #include <semaphore.h>
 
-pthread_mutex_t cityA_mutex;
-pthread_mutex_t cityB_mutex;
-pthread_mutex_t queueA_mutex;
-pthread_mutex_t queueB_mutex;
+pthread_mutex_t cityA_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t cityB_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t queueA_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t queueB_mutex = PTHREAD_MUTEX_INITIALIZER;
 int info=0, cityA=0, cityB=0, queueA=0, queueB=0, bridge=0;
 
 typedef struct ticket_lock {
